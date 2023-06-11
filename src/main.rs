@@ -1,7 +1,7 @@
 use std::process;
 
 fn main() {
-    match runst::run() {
+    match armesto::run() {
         Ok(_) => process::exit(0),
         Err(e) => {
             eprintln!("{e}");
