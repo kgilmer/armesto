@@ -1,6 +1,6 @@
 [package]
 name = "armesto"
-version = "0.1.4" # bumped by release.sh
+version = "0.0.1"
 description = "Another rofication daemon"
 authors = ["Ken Gilmer <kgilmer@gmail.com>"]
 license = "MIT OR Apache-2.0"

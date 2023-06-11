@@ -11,9 +11,12 @@ pub mod dbus;
 /// Notification manager.
 pub mod notification;
 
+pub mod rofi;
+
 use crate::dbus::DbusServer;
 use crate::error::Result;
 use crate::notification::Action;
+use crate::rofi::RofiServer;
 use notification::Manager;
 use std::sync::mpsc;
 use std::thread;
@@ -34,6 +37,11 @@ pub fn run() -> Result<()> {
         dbus_server
             .register_notification_handler(sender, timeout)
             .expect("failed to register D-Bus notification handler");
+    });
+
+    thread::spawn(move || {
+        let rofi_server = RofiServer::new("/tmp/testsocket".to_string());
+        rofi_server.start();
     });
 
     loop {
