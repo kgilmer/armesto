@@ -1,5 +1,3 @@
-mod rofi;
-
 use std::process;
 
 fn main() {

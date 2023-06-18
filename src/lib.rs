@@ -11,11 +11,12 @@ pub mod dbus;
 /// Notification manager.
 pub mod notification;
 
+/// Rofi server
 pub mod rofi;
 
 use crate::dbus::DbusServer;
 use crate::error::Result;
-use crate::notification::Action;
+use notification::Action;
 use crate::rofi::RofiServer;
 use notification::Manager;
 use std::sync::mpsc;
@@ -29,7 +30,7 @@ pub fn run() -> Result<()> {
     let dbus_server = DbusServer::init()?;
     let timeout = Duration::from_millis(1000);
 
-    let notifications = Manager::init();
+    let db = Manager::init();
     let (sender, receiver) = mpsc::channel();
 
     thread::spawn(move || {
@@ -39,16 +40,18 @@ pub fn run() -> Result<()> {
             .expect("failed to register D-Bus notification handler");
     });
 
-    thread::spawn(move || {
-        let rofi_server = RofiServer::new("/tmp/testsocket".to_string());
-        rofi_server.start();
+    let db_copy = db.clone();
+    thread::spawn(|| {
+        println!("starting rofi server");
+        let rofi_server = RofiServer::new("/tmp/testsocket".to_string(), db_copy);
+        rofi_server.start().expect("Create domain socket server for rofication requests")
     });
 
     loop {
         match receiver.recv()? {
             Action::Show(notification) => {
                 println!("received notification: {} {}", notification.id, notification.body);
-                notifications.add(notification);
+                db.add(notification);
             }
             Action::ShowLast => {
                 println!("showing the last notification");
@@ -56,15 +59,15 @@ pub fn run() -> Result<()> {
             Action::Close(id) => {
                 if let Some(id) = id {
                     println!("closing notification: {}", id);
-                    notifications.mark_as_read(id);
+                    db.mark_as_read(id);
                 } else {
                     println!("closing the last notification");
-                    notifications.mark_last_as_read();
+                    db.mark_last_as_read();
                 }
             }
             Action::CloseAll => {
                 println!("closing all notifications");
-                notifications.mark_all_as_read();
+                db.mark_all_as_read();
             }
         }
     }

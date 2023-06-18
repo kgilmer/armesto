@@ -1,5 +1,5 @@
 use crate::error;
-use crate::notification::{Action, Notification};
+use crate::notification::{Action, Notification, Manager};
 use dbus::arg::{RefArg, Variant};
 use dbus::blocking::{Connection, Proxy};
 use dbus::channel::MatchingReceiver;
@@ -50,6 +50,7 @@ pub struct DbusNotification {
 
 impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
     fn get_capabilities(&mut self) -> Result<Vec<String>, dbus::MethodErr> {
+        let x = Manager::init();
         Ok(SERVER_CAPABILITIES.into_iter().map(String::from).collect())
     }
 
