@@ -1,5 +1,5 @@
 use crate::error;
-use crate::notification::{Action, Notification, Manager};
+use crate::notification::{Notification, NotificationStore, Action};
 use dbus::arg::{RefArg, Variant};
 use dbus::blocking::{Connection, Proxy};
 use dbus::channel::MatchingReceiver;
@@ -50,18 +50,18 @@ pub struct DbusNotification {
 
 impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
     fn get_capabilities(&mut self) -> Result<Vec<String>, dbus::MethodErr> {
-        let x = Manager::init();
+        let x = NotificationStore::init();
         Ok(SERVER_CAPABILITIES.into_iter().map(String::from).collect())
     }
 
     fn notify(
         &mut self,
-        app_name: String,
+        application: String,
         replaces_id: u32,
-        _app_icon: String,
+        icon: String,
         summary: String,
         body: String,
-        _actions: Vec<String>,
+        actions: Vec<String>,
         hints: dbus::arg::PropMap,
         expire_timeout: i32,
     ) -> Result<u32, dbus::MethodErr> {
@@ -72,23 +72,20 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
         };
         let notification = Notification {
             id,
-            app_name,
             summary,
             body,
-            expire_timeout: if expire_timeout != -1 {
-                match expire_timeout.try_into() {
-                    Ok(v) => Some(Duration::from_millis(v)),
-                    Err(_) => None,
-                }
-            } else {
-                None
-            },
+            application,            
+            icon,
             urgency: hints
                 .get("urgency")
                 .and_then(|v| v.as_u64())
                 .map(|v| v.into())
                 .unwrap_or_default(),
-            is_read: false,
+            actions,
+            hints: hints
+                .into_iter()
+                .map(|(k, v)| (k, v.as_str().unwrap_or_default().to_string()))
+                .collect(),
             timestamp: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .map_err(|e| dbus::MethodErr::failed(&e))?

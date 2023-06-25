@@ -1,9 +1,10 @@
-use std::{os::unix::net::{UnixListener, UnixStream}, io::{Read, BufRead}, io::{BufReader, BufWriter, Write}};
-use crate::notification::Manager;
+use std::{os::unix::net::{UnixListener, UnixStream}, io::BufRead, io::{BufReader, BufWriter, Write}};
+use crate::notification::NotificationStore;
 
+/// Provides a service for roficiation clients. See https://github.com/DaveDavenport/Rofication
 pub struct RofiServer {
     socket_path: String,
-    db: Manager,
+    db: NotificationStore,
 }
 
 // See https://github.com/DaveDavenport/Rofication/blob/master/rofication-daemon.py#LL155C1-L170C87
@@ -14,24 +15,6 @@ pub enum RofiCommand {
     DELETE_SIMILAR,
     DELETE_APPS,
     MARK_SEEN,
-/*
-    # Get number of notifications
-    if command == "num":
-        self.communication_command_num(connection)
-    # Getting a listing.
-    elif command == "list":
-        self.communication_command_send_list(connection)
-    # Dismiss and item.
-    elif command == "del":
-        self.communication_command_delete(connection,data.split(':')[1])
-    elif command == "dels":
-        self.communication_command_delete_similar(connection,data.split(':')[1])
-    elif command == "dela":
-        self.communication_command_delete_apps(connection,data.split(':')[1])
-    # Saw an item, this sets the urgency to normal.
-    elif command == "saw":
-        self.communication_command_saw(connection, data.split(':')[1])
-         */
 }
 
 impl RofiCommand {
@@ -47,8 +30,8 @@ impl RofiCommand {
                     "dels" => Some(Self::DELETE_SIMILAR),
                     "dela" => Some(Self::DELETE_APPS),
                     "saw" => Some(Self::MARK_SEEN),
-                    v => {
-                        println!("unknown command: '{}'", v);
+                    other => {
+                        println!("unknown command: '{}'", other);
                         None
                     }
                 }
@@ -60,7 +43,7 @@ impl RofiCommand {
 }
 
 impl  RofiServer {
-    pub fn new(socket_path: String, db: Manager) -> RofiServer {
+    pub fn new(socket_path: String, db: NotificationStore) -> RofiServer {
         return RofiServer { socket_path, db }
     }
 
@@ -71,7 +54,7 @@ impl  RofiServer {
         for stream in listener.incoming() {
             match stream {
                 Ok(mut stream) => {
-                    Self::handle_request(stream);                    
+                    self.handle_request(stream);                    
                 }
                 Err(err) => {
                     println!("Failed to initialize socket listener: {}", err);
@@ -82,7 +65,7 @@ impl  RofiServer {
         Ok(())
     }
 
-    fn handle_request(stream: UnixStream) {        
+    fn handle_request(&self, stream: UnixStream) {        
         let mut client_in = BufReader::new(&stream);
         let mut client_out = BufWriter::new(&stream);
 
@@ -90,15 +73,21 @@ impl  RofiServer {
         let _ = client_in.read_line(&mut line).expect("unable to read");
 
         let line = line.trim();
-        println!("Message: '{}'", line);
+        println!("Rofication client request: '{}'", line);
 
         match RofiCommand::parse(&line) {
-            Some(RofiCommand::COUNT) => {
-                client_out.write("0".as_bytes()).unwrap();
-                client_out.flush().unwrap();
+            Some(RofiCommand::COUNT) => {                
+                client_out.write(self.db.count().to_string().as_bytes()).unwrap();
+                client_out.flush().expect("Sending response back to client")
+            },
+            Some(RofiCommand::LIST) => {
+                let elems = self.db.items();
+                let response = serde_json::to_string(&elems).unwrap();
+                client_out.write(&response.as_bytes()).unwrap();
+                client_out.flush().expect("Sending response back to client")
             },
             _ => {
-                println!("Unable to parse message, no action taken");
+                println!("Unable to parse message, no action taken: {}", &line);
             }
         }
 
