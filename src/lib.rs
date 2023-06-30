@@ -59,12 +59,12 @@ pub fn run() -> Result<()> {
             Action::Close(id) => {
                 if let Some(id) = id {
                     println!("closing notification: {}", id);
-                    db.mark_as_read(id);
+                    db.delete(id);
                 } 
             }
             Action::CloseAll => {
                 println!("closing all notifications");
-                db.mark_all_as_read();
+                db.delete_all();
             }
         }
     }

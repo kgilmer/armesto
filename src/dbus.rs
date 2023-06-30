@@ -1,5 +1,5 @@
 use crate::error;
-use crate::notification::{Notification, NotificationStore, Action};
+use crate::notification::{Notification, Action};
 use dbus::arg::{RefArg, Variant};
 use dbus::blocking::{Connection, Proxy};
 use dbus::channel::MatchingReceiver;
@@ -50,7 +50,6 @@ pub struct DbusNotification {
 
 impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
     fn get_capabilities(&mut self) -> Result<Vec<String>, dbus::MethodErr> {
-        let x = NotificationStore::init();
         Ok(SERVER_CAPABILITIES.into_iter().map(String::from).collect())
     }
 
@@ -63,7 +62,7 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
         body: String,
         actions: Vec<String>,
         hints: dbus::arg::PropMap,
-        expire_timeout: i32,
+        _expire_timeout: i32,
     ) -> Result<u32, dbus::MethodErr> {
         let id = if replaces_id == 0 {
             ID_COUNT.fetch_add(1, Ordering::Relaxed)
