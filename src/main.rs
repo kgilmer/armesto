@@ -1,4 +1,6 @@
-use std::process;
+use std::{process};
+use armesto::Config;
+use clap::{Parser};
 use syslog::{Facility, Formatter3164, BasicLogger};
 use log::{info, error, LevelFilter};
 
@@ -16,11 +18,12 @@ fn main() {
     };
 
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
-        .map(|()| log::set_max_level(LevelFilter::Info)).expect("can set logger");
+        .map(|()| log::set_max_level(LevelFilter::Info)).expect("can set logger");    
 
-    info!("Starting armesto..");
+    let config = Config::parse();
+    info!("Starting armesto with {:?}", config);
 
-    match armesto::run() {
+    match armesto::run(config) {
         Ok(_) => process::exit(0),
         Err(e) => {
             error!("Unable to start armesto, aborting: {:?}", e);

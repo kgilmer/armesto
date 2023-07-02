@@ -1,5 +1,5 @@
 use std::{os::unix::net::{UnixListener, UnixStream}, io::BufRead, io::{BufReader, BufWriter, Write}};
-use log::{warn, info, debug};
+use log::{warn, debug};
 
 use crate::notification::{NotificationStore, Urgency};
 
@@ -86,7 +86,7 @@ impl  RofiServer {
 
     /// Server listens for incoming requests, blocks
     pub fn start(&self) -> std::io::Result<()> {
-        info!("Rofication server binding to path {}", &self.socket_path);
+        debug!("Rofication server binding to path {}", &self.socket_path);
         let listener = UnixListener::bind(&self.socket_path)?;
     
         for stream in listener.incoming() {
