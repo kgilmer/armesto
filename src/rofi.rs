@@ -1,4 +1,6 @@
 use std::{os::unix::net::{UnixListener, UnixStream}, io::BufRead, io::{BufReader, BufWriter, Write}};
+use log::{warn, info, debug};
+
 use crate::notification::{NotificationStore, Urgency};
 
 /// Provides service to roficiation clients. See https://github.com/DaveDavenport/Rofication
@@ -65,7 +67,7 @@ impl RofiCommand {
                         Some(Self::MarkSeen(id))
                     },
                     unrecognized_cmd => {
-                        println!("unknown command: '{}'", unrecognized_cmd);
+                        warn!("unknown command: '{}'", unrecognized_cmd);
                         None
                     }
                 }
@@ -84,7 +86,7 @@ impl  RofiServer {
 
     /// Server listens for incoming requests, blocks
     pub fn start(&self) -> std::io::Result<()> {
-        println!("Binding to path {}", &self.socket_path);
+        info!("Rofication server binding to path {}", &self.socket_path);
         let listener = UnixListener::bind(&self.socket_path)?;
     
         for stream in listener.incoming() {
@@ -109,7 +111,7 @@ impl  RofiServer {
         let _ = client_in.read_line(&mut line).expect("unable to read");
 
         let line = line.trim();
-        println!("Rofication client request: '{}'", line);
+        debug!("Rofication client request: '{}'", line);
 
         match RofiCommand::parse(&line) {
             Some(command) => self.execute_command(command, &mut client_out),
@@ -150,7 +152,6 @@ impl  RofiServer {
             RofiCommand::MarkSeen(id) => {
                 self.db.set_urgency(id, Urgency::Normal);
             }
-            
         }
     }
 }

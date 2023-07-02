@@ -16,6 +16,7 @@ pub mod rofi;
 
 use crate::dbus::DbusServer;
 use crate::error::Result;
+use log::debug;
 use notification::Action;
 use crate::rofi::RofiServer;
 use notification::NotificationStore;
@@ -25,8 +26,6 @@ use std::time::Duration;
 
 /// Service entry-point
 pub fn run() -> Result<()> {
-    tracing::info!("starting");
-
     let dbus_server = DbusServer::init()?;
     let timeout = Duration::from_millis(1000);
 
@@ -34,7 +33,7 @@ pub fn run() -> Result<()> {
     let (sender, receiver) = mpsc::channel();
 
     thread::spawn(move || {
-        println!("registering D-Bus handler");
+        debug!("registering D-Bus server");
         dbus_server
             .register_notification_handler(sender, timeout)
             .expect("failed to register D-Bus notification handler");
@@ -42,7 +41,7 @@ pub fn run() -> Result<()> {
 
     let db_clone = db.clone();
     thread::spawn(|| {
-        println!("starting rofi server");
+        debug!("starting rofication server");
         let rofi_server = RofiServer::new("/tmp/rofi_notification_daemon".to_string(), db_clone);
         rofi_server.start().expect("Create domain socket server for rofication requests")
     });
@@ -50,20 +49,20 @@ pub fn run() -> Result<()> {
     loop {
         match receiver.recv()? {
             Action::Show(notification) => {
-                println!("received notification: {} {}", notification.id, notification.body);                
+                debug!("received notification: {} {}", notification.id, notification.body);                
                 db.add(notification);
             }
             Action::ShowLast => {
-                println!("showing the last notification");
+                debug!("showing the last notification");
             }
             Action::Close(id) => {
                 if let Some(id) = id {
-                    println!("closing notification: {}", id);
+                    debug!("closing notification: {}", id);
                     db.delete(id);
                 } 
             }
             Action::CloseAll => {
-                println!("closing all notifications");
+                debug!("closing all notifications");
                 db.delete_all();
             }
         }

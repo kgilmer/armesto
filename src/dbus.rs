@@ -6,6 +6,7 @@ use dbus::channel::MatchingReceiver;
 use dbus::message::MatchRule;
 use dbus::MethodErr;
 use dbus_crossroads::Crossroads;
+use log::{trace, debug};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
@@ -90,7 +91,8 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
                 .map_err(|e| dbus::MethodErr::failed(&e))?
                 .as_secs(),
         };
-        tracing::trace!("{:#?}", notification);
+        trace!("Received notification {} from dbus", notification.id);
+
         match self.sender.send(Action::Show(notification)) {
             Ok(_) => Ok(id),
             Err(e) => Err(dbus::MethodErr::failed(&e)),
@@ -98,7 +100,7 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
     }
 
     fn close_notification(&mut self, id: u32) -> Result<(), dbus::MethodErr> {
-        tracing::trace!("received close signal for notification: {}", id);
+        trace!("Received close signal for notification {}", id);
         match self.sender.send(Action::Close(Some(id))) {
             Ok(_) => Ok(()),
             Err(e) => Err(dbus::MethodErr::failed(&e)),
@@ -131,8 +133,8 @@ pub struct DbusServer {
 impl DbusServer {
     /// Initializes the D-Bus controller.
     pub fn init() -> error::Result<Self> {
-        tracing::trace!("D-Bus server information: {:#?}", SERVER_INFO);
-        tracing::trace!("D-Bus server capabilities: {:?}", SERVER_CAPABILITIES);
+        debug!("D-Bus server information: {:#?}", SERVER_INFO);
+        debug!("D-Bus server capabilities: {:?}", SERVER_CAPABILITIES);
         let connection = Connection::new_session()?;
         let crossroads = Crossroads::new();
         Ok(Self {
@@ -257,11 +259,6 @@ impl DbusClient {
     ///
     /// See `org.freedesktop.Notifications.CloseNotification`
     pub fn close_notification(&self, id: u32, timeout: Duration) -> error::Result<()> {
-        tracing::trace!(
-            "sending close signal for notification: {} (timeout: {}ms)",
-            id,
-            timeout.as_millis()
-        );
         let proxy = Proxy::new(
             NOTIFICATION_INTERFACE,
             NOTIFICATION_PATH,

@@ -20,8 +20,6 @@ pub enum Error {
     Scanf(String),
     #[error("Integer conversion error: `{0}`")]
     IntegerConversion(#[from] std::num::TryFromIntError),
-    #[error("Template error: `{0}`")]
-    Template(#[from] tera::Error),
     #[error("Template parse error:\n{0}")]
     TemplateParse(String),
     #[error("Template render error:\n{0}")]
