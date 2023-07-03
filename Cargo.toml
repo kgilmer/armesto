@@ -11,7 +11,7 @@ keywords = ["notification", "daemon", "dbus", "notify"]
 categories = []
 include = ["src/**/*", "dbus/*", "build.rs", "Cargo.*", "LICENSE-*", "*.md"]
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.64"
 
 [dependencies]
 dbus = "0.9.7"
