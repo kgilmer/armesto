@@ -1,3 +1,9 @@
+armesto (0.1.1) focal; urgency=medium
+
+  * specify install files
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sun, 02 Jul 2023 20:10:29 -0700
+
 armesto (0.1.0) focal; urgency=medium
 
   [ Regolith Linux ]
