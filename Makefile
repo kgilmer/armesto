@@ -3,12 +3,8 @@
 INSTALL_PROGRAM = install -D -m 0755
 INSTALL_DATA = install -D -m 0644
 
-prefix = ${DESTDIR}/usr
-exec_prefix = $(prefix)
-bindir = $(exec_prefix)/bin
-datarootdir = $(prefix)/share
-libdir = $(exec_prefix)/lib
-zshcpl = $(datarootdir)/zsh/site-functions
+PREFIX ?= $(DESTDIR)
+BINDIR ?= $(PREFIX)/usr/bin
 
 BIN := armesto
 
@@ -36,10 +32,10 @@ build:
 	cargo build --release
 
 install: 
-	$(INSTALL_PROGRAM) "./target/release/$(BIN)" "$(bindir)/$(BIN)"
+	$(INSTALL_PROGRAM) "./target/release/$(BIN)" "$(BINDIR)/$(BIN)"
 
 uninstall:
-	rm -f "$(bindir)/$(BIN)"
+	rm -f "$(BINDIR)/$(BIN)"
 
 run-test:
 	cargo test -- --test-threads=1
