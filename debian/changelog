@@ -1,3 +1,13 @@
+armesto (0.1.2) focal; urgency=medium
+
+  * Add makefile to connect debian build to rust, adapted from trawldb
+  * downgrade rust version due to build dep issues
+  * Try a different form of install file due to build error
+  * build cleanup
+  * Fix build dep
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Tue, 04 Jul 2023 08:20:21 -0700
+
 armesto (0.1.1) focal; urgency=medium
 
   * specify install files
