@@ -8,5 +8,5 @@ Standards-Version: 4.5.0
 Package: armesto
 Architecture: any
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}, libdbus-1-dev
 Description: Notification middleman for rofication
