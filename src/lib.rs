@@ -17,7 +17,7 @@ pub mod rofi;
 use crate::dbus::DbusServer;
 use crate::error::Result;
 use clap::Parser;
-use log::{debug, error};
+use log::{debug};
 use notification::Action;
 use crate::rofi::RofiServer;
 use notification::NotificationStore;

@@ -2,7 +2,7 @@ use std::{process};
 use armesto::Config;
 use clap::{Parser};
 use syslog::{Facility, Formatter3164, BasicLogger};
-use log::{info, error, LevelFilter, debug};
+use log::{error, LevelFilter, debug};
 
 fn main() {
     let formatter = Formatter3164 {
