@@ -66,7 +66,7 @@ pub struct Notification {
     pub timestamp: u64,
 }
 
-/// d-bus actions for a notification.
+/// Specifies internal events
 #[derive(Debug)]
 pub enum Action {
     /// Show a notification.
@@ -77,6 +77,8 @@ pub enum Action {
     Close(Option<u32>),
     /// Close all the notifications.
     CloseAll,
+    /// A fatal problem occurred, exit
+    Shutdown(crate::error::Error),
 }
 
 /// Notification database

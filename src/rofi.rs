@@ -1,5 +1,5 @@
 use std::{os::unix::net::{UnixListener, UnixStream}, io::BufRead, io::{BufReader, BufWriter, Write}};
-use log::{warn, debug};
+use log::{warn, debug, error};
 
 use crate::notification::{NotificationStore, Urgency};
 
@@ -27,7 +27,7 @@ pub enum RofiCommand {
 
 impl RofiCommand {
     fn parse(client_request: &str) -> Option<RofiCommand> {
-        let mut token_iter = client_request.split(" ").into_iter();
+        let mut token_iter = client_request.split(":").into_iter();
 
         match token_iter.next() {
             Some(command) => {
@@ -115,7 +115,7 @@ impl  RofiServer {
 
         match RofiCommand::parse(&line) {
             Some(command) => self.execute_command(command, &mut client_out),
-            None => println!("Unable to parse message, no action taken: {}", &line),
+            None => error!("Unable to parse message, no action taken: {}", &line),
         }
     }
 

@@ -17,7 +17,7 @@ pub mod rofi;
 use crate::dbus::DbusServer;
 use crate::error::Result;
 use clap::Parser;
-use log::debug;
+use log::{debug, error};
 use notification::Action;
 use crate::rofi::RofiServer;
 use notification::NotificationStore;
@@ -41,30 +41,37 @@ pub struct Config {
 /// Service entry-point
 pub fn run(config: Config) -> Result<()> {
     let dbus_server = DbusServer::init()?;
-    // let timeout = 
-
     let db = NotificationStore::init();
-    let (sender, receiver) = mpsc::channel();
+    let (dbus_sender, receiver) = mpsc::channel();
+    let rofi_sender = dbus_sender.clone();
 
     thread::Builder::new().name("dbus".to_string()).spawn(move || {
         debug!("registering D-Bus server");
+        let dbus_sender2 = dbus_sender.clone();
         let duration = Duration::from_millis(config.dbus_poll_timeout.into());
         dbus_server
-            .register_notification_handler(sender, duration)
-            .expect("failed to register D-Bus notification handler");
+            .register_notification_handler(dbus_sender, duration)
+            .unwrap_or_else(|err| {
+                dbus_sender2.send(Action::Shutdown(err.into())).unwrap();
+                ()
+            });
     })?;
 
     let db_clone = db.clone();
     thread::Builder::new().name("rofication".to_string()).spawn(move || {
         debug!("starting rofication server");
         let rofi_server = RofiServer::new("/tmp/rofi_notification_daemon".to_string(), db_clone);
-        rofi_server.start().expect("Create domain socket server for rofication requests")
+        rofi_server
+            .start()
+            .unwrap_or_else(|err| {
+                rofi_sender.send(Action::Shutdown(err.into())).unwrap();
+                ()
+            });
     })?;
 
     loop {
         match receiver.recv()? {
-            Action::Show(notification) => {
-                debug!("received notification: {} {}", notification.id, notification.body);                
+            Action::Show(notification) => {                
                 db.add(notification);
             }
             Action::ShowLast => {
@@ -80,6 +87,7 @@ pub fn run(config: Config) -> Result<()> {
                 debug!("closing all notifications");
                 db.delete_all();
             }
+            Action::Shutdown(reason) => break Err(reason),
         }
     }
 }

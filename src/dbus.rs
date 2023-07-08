@@ -1,6 +1,7 @@
-use crate::error;
+use crate::error::{self, Error};
 use crate::notification::{Notification, Action};
 use dbus::arg::{RefArg, Variant};
+use dbus::blocking::stdintf::org_freedesktop_dbus::RequestNameReply;
 use dbus::blocking::{Connection, Proxy};
 use dbus::channel::MatchingReceiver;
 use dbus::message::MatchRule;
@@ -91,7 +92,7 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
                 .map_err(|e| dbus::MethodErr::failed(&e))?
                 .as_secs(),
         };
-        trace!("Received notification {} from dbus", notification.id);
+        debug!("Received notification {} from dbus", notification.id);
 
         match self.sender.send(Action::Show(notification)) {
             Ok(_) => Ok(id),
@@ -100,7 +101,7 @@ impl dbus_server::OrgFreedesktopNotifications for DbusNotification {
     }
 
     fn close_notification(&mut self, id: u32) -> Result<(), dbus::MethodErr> {
-        trace!("Received close signal for notification {}", id);
+        debug!("Received close signal for notification {}", id);
         match self.sender.send(Action::Close(Some(id))) {
             Ok(_) => Ok(()),
             Err(e) => Err(dbus::MethodErr::failed(&e)),
@@ -150,9 +151,14 @@ impl DbusServer {
         mut self,
         sender: Sender<Action>,
         timeout: Duration,
-    ) -> error::Result<()> {
-        self.connection
+    ) -> Result<(), Error> {
+        let reply = self.connection
             .request_name(NOTIFICATION_INTERFACE, false, true, false)?;
+
+        if reply != RequestNameReply::PrimaryOwner {
+            return Err(error::Error::InitializationError);
+        }
+
         let token = dbus_server::register_org_freedesktop_notifications(&mut self.crossroads);
         self.crossroads.insert(
             NOTIFICATION_PATH,

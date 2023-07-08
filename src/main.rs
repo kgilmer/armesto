@@ -2,7 +2,7 @@ use std::{process};
 use armesto::Config;
 use clap::{Parser};
 use syslog::{Facility, Formatter3164, BasicLogger};
-use log::{info, error, LevelFilter};
+use log::{info, error, LevelFilter, debug};
 
 fn main() {
     let formatter = Formatter3164 {
@@ -18,10 +18,11 @@ fn main() {
     };
 
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
-        .map(|()| log::set_max_level(LevelFilter::Info)).expect("can set logger");    
+        .map(|()| log::set_max_level(LevelFilter::Debug))
+        .expect("can set logger");    
 
     let config = Config::parse();
-    info!("Starting armesto with {:?}", config);
+    debug!("Starting armesto with {:?}", config);
 
     match armesto::run(config) {
         Ok(_) => process::exit(0),
