@@ -69,13 +69,13 @@ pub struct Notification {
 /// Specifies internal events
 #[derive(Debug)]
 pub enum Action {
-    /// Show a notification.
+    /// Show a notification event from dbus
     Show(Notification),
-    /// Show the last notification.
+    /// Show the last notification from dbus
     ShowLast,
-    /// Close a notification.
+    /// Close a notification event from dbus
     Close(Option<u32>),
-    /// Close all the notifications.
+    /// Close all the notifications event from dbus
     CloseAll,
     /// A fatal problem occurred, exit
     Shutdown(crate::error::Error),
