@@ -24,6 +24,7 @@ serde_repr = "0.1"
 log = "0.4"
 syslog = "6.1"
 clap = { version = "4.3.10", features = ["derive"] }
+time = "0.3.36"
 
 [build-dependencies]
 dbus-codegen = "0.10.0"
