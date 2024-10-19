@@ -1,3 +1,9 @@
+armesto (0.2.0ubuntu1) jammy; urgency=medium
+
+  * fix: update time dependency due to breaking change upstream.
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sat, 19 Oct 2024 14:05:32 -0700
+
 armesto (0.2.0) focal; urgency=medium
 
   * feat: some work in error handling. address silent failure due to another dbus server running
