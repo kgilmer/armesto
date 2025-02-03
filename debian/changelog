@@ -1,3 +1,14 @@
+armesto (0.2.1ubuntu1) jammy; urgency=medium
+
+  [ Khosrow Moossavi ]
+  * feat: enable github action to test pull requests
+  * feat: enable github action to publish to unstable
+  * feat: enable github action to publish to testing
+  * feat: enable github action to prepare release
+  * fix: create release tag from correct git sha
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Mon, 03 Feb 2025 21:32:39 +0000
+
 armesto (0.2.0ubuntu1) jammy; urgency=medium
 
   * fix: update time dependency due to breaking change upstream.
